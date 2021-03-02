@@ -1,6 +1,10 @@
 Router socks
 ======
 
+The next step after compromising a machine is to enumerate the network behind. Many tools exist to expose a socks port on the attacker's machine and send all the traffic through a tunnel to the compromised machine. When several socks ports are available, we have to manage different proxychains configuration to choose the targeted network. 
+This tool will expose one socks port and route the traffic through the configured path.
+
+
 The idea came after using [chisel](https://github.com/jpillora/chisel). Chisel is really helpful but it can get hard to manage many clients as it is opening a new socks port for each new client with reverse mode.
 
 ![Schema](./images/schema.png)
