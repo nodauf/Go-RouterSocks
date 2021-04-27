@@ -7,6 +7,7 @@ import (
 	"net"
 	"os"
 	"strconv"
+	"strings"
 
 	socks5 "github.com/nodauf/Go-RouterSocks/go-socks5"
 	router "github.com/nodauf/Go-RouterSocks/router"
@@ -50,9 +51,15 @@ func listenAndAccept(address string, status chan error) {
 			if err != nil {
 				log.Println(err)
 			}
-			remoteSocks := router.GetRoute(dest)
+			network, remoteSocks := router.GetRoute(dest)
 			if remoteSocks != "" {
-				connectToSocks(firstBytes, secondBytes, conn, remoteSocks)
+				err := connectToSocks(firstBytes, secondBytes, conn, remoteSocks)
+				// If the socks server is no longer available, we have the error conneciton refused
+				if err != nil && strings.Contains(err.Error(), "connection refused") {
+					// The route is no longer valid and we delete it
+					fmt.Println("Remote socks server no longer available")
+					router.DeleteRoutes(network)
+				}
 			} else {
 				fmt.Println("\n[-] Unkown route for " + dest)
 				conn.Close()
@@ -61,13 +68,14 @@ func listenAndAccept(address string, status chan error) {
 	}
 }
 
-func connectToSocks(firstBytes []byte, secondBytes []byte, src net.Conn, remoteSocks string) {
+func connectToSocks(firstBytes []byte, secondBytes []byte, src net.Conn, remoteSocks string) error {
 
 	var proxy net.Conn
 	//log.Println("Connecting to remote socks")
 	proxy, err := net.Dial("tcp", remoteSocks)
 	if err != nil {
-		fmt.Println(err)
+		log.Println(err)
+		return err
 	}
 	defer src.Close()
 	defer proxy.Close()
@@ -87,7 +95,7 @@ func connectToSocks(firstBytes []byte, secondBytes []byte, src net.Conn, remoteS
 	case <-chanToRemote:
 		//log.Println("Local program is terminated")
 	}
-
+	return nil
 }
 
 // Performs copy operation between streams: os and tcp streams

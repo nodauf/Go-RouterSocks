@@ -40,11 +40,11 @@ func FlushRoutes() {
 	fmt.Println("[*] Successfull route flushed")
 }
 
-func GetRoute(ip string) string {
+func GetRoute(ip string) (string, string) {
 	for network, remoteSocks := range Routes {
 		if utils.CIDRContainsIP(network, ip) {
-			return remoteSocks
+			return network, remoteSocks
 		}
 	}
-	return ""
+	return "", ""
 }
