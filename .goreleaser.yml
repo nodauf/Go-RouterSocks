@@ -1,6 +1,5 @@
 builds:
   - goos:
-      - darwin
       - linux
       - windows
     goarch:
