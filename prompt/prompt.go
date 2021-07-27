@@ -1,6 +1,7 @@
 package prompt
 
 import (
+	"bufio"
 	"fmt"
 	"os"
 	"strings"
@@ -12,6 +13,7 @@ import (
 )
 
 func executor(in string) {
+	in = strings.TrimSpace(in)
 	command := strings.Split(in, " ")
 	first := command[0]
 	switch strings.ToLower(first) {
