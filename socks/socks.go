@@ -47,22 +47,25 @@ func listenAndAccept(address string, status chan error) {
 		//log.Println("Passing off to socks5")
 		go func() {
 			//firstBytes, secondBytes, dest, err := serverSocks5.GetDest(conn)
-			firstBytes, secondBytes, dest, err := serverSocks5.GetDest(conn)
+			firstBytes, secondBytes, dest, request, err := serverSocks5.GetDest(conn)
 			if err != nil {
-				log.Println(err)
+				// The errors are print to stdout by go-socks5
+				//log.Println(err)
+				conn.Close()
+				return
 			}
-			network, remoteSocks := router.GetRoute(dest)
+			_, remoteSocks := router.GetRoute(dest)
 			if remoteSocks != "" {
 				err := connectToSocks(firstBytes, secondBytes, conn, remoteSocks)
 				// If the socks server is no longer available, we have the error conneciton refused
 				if err != nil && strings.Contains(err.Error(), "connection refused") {
 					// The route is no longer valid and we delete it
-					fmt.Println("Remote socks server no longer available")
-					router.DeleteRoutes(network)
+					fmt.Println("Remote socks " + remoteSocks + " server no longer available. Got connection refused")
+					//router.DeleteRoutes(network)
 				}
 			} else {
-				fmt.Println("\n[-] Unkown route for " + dest)
-				conn.Close()
+				fmt.Println("\n[-] Unkown route for " + dest + " using direct connection without proxy")
+				serverSocks5.Handle(request, conn)
 			}
 		}()
 	}

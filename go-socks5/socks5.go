@@ -168,7 +168,7 @@ func (s *Server) ServeConn(conn net.Conn) error {
 	return nil
 }
 
-func (s *Server) GetDest(conn net.Conn) ([]byte, []byte, string, error) {
+func (s *Server) GetDest(conn net.Conn) ([]byte, []byte, string, *Request, error) {
 	var firstBytes []byte
 	var secondBytes []byte
 	//defer conn.Close()
@@ -178,7 +178,7 @@ func (s *Server) GetDest(conn net.Conn) ([]byte, []byte, string, error) {
 	version := []byte{0}
 	if _, err := bufConn.Read(version); err != nil {
 		s.config.Logger.Printf("[ERR] socks: Failed to get version byte: %v", err)
-		return nil, nil, "", err
+		return nil, nil, "", nil, err
 	}
 	firstBytes = append(firstBytes, version...)
 
@@ -186,7 +186,7 @@ func (s *Server) GetDest(conn net.Conn) ([]byte, []byte, string, error) {
 	if version[0] != socks5Version {
 		err := fmt.Errorf("Unsupported SOCKS version: %v", version)
 		s.config.Logger.Printf("[ERR] socks: %v", err)
-		return nil, nil, "", err
+		return nil, nil, "", nil, err
 	}
 
 	// Authenticate the connection
@@ -194,7 +194,7 @@ func (s *Server) GetDest(conn net.Conn) ([]byte, []byte, string, error) {
 	if err != nil {
 		err = fmt.Errorf("Failed to authenticate: %v", err)
 		s.config.Logger.Printf("[ERR] socks: %v", err)
-		return nil, nil, "", err
+		return nil, nil, "", nil, err
 	}
 	firstBytes = append(firstBytes, byte(len(methodsByte)))
 	firstBytes = append(firstBytes, methodsByte...)
@@ -204,10 +204,10 @@ func (s *Server) GetDest(conn net.Conn) ([]byte, []byte, string, error) {
 	if err != nil {
 		if err == unrecognizedAddrType {
 			if err := sendReply(conn, addrTypeNotSupported, nil); err != nil {
-				return nil, nil, "", fmt.Errorf("Failed to send reply: %v", err)
+				return nil, nil, "", nil, fmt.Errorf("Failed to send reply: %v", err)
 			}
 		}
-		return nil, nil, "", fmt.Errorf("Failed to read destination address: %v", err)
+		return nil, nil, "", nil, fmt.Errorf("Failed to read destination address: %v", err)
 	}
 
 	ctx := context.Background()
@@ -218,9 +218,9 @@ func (s *Server) GetDest(conn net.Conn) ([]byte, []byte, string, error) {
 		ctx_, addr, err := s.config.Resolver.Resolve(ctx, dest.FQDN)
 		if err != nil {
 			if err := sendReply(conn, hostUnreachable, nil); err != nil {
-				return nil, nil, "", fmt.Errorf("Failed to send reply: %v", err)
+				return nil, nil, "", nil, fmt.Errorf("Failed to send reply: %v", err)
 			}
-			return nil, nil, "", fmt.Errorf("Failed to resolve destination '%v': %v", dest.FQDN, err)
+			return nil, nil, "", nil, fmt.Errorf("Failed to resolve destination '%v': %v", dest.FQDN, err)
 		}
 		ctx = ctx_
 		dest.IP = addr
@@ -241,5 +241,12 @@ func (s *Server) GetDest(conn net.Conn) ([]byte, []byte, string, error) {
 		return err
 	} */
 
-	return firstBytes, secondBytes, request.realDestAddr.IP.String(), nil
+	return firstBytes, secondBytes, request.realDestAddr.IP.String(), request, nil
+}
+
+func (s *Server) Handle(request *Request, conn net.Conn) {
+	if err := s.handleRequest(request, conn); err != nil {
+		err = fmt.Errorf("Failed to handle request: %v", err)
+		s.config.Logger.Printf("[ERR] socks: %v", err)
+	}
 }
