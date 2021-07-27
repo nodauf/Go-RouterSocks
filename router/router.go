@@ -13,14 +13,14 @@ func AddRoutes(network string, remoteSocks string) {
 		fmt.Println("[-] Route already present")
 	} else {
 		Routes[network] = remoteSocks
-		fmt.Println("[*] Successfull route added")
+		fmt.Println("[*] Successfull route added for network " + network)
 	}
 }
 
 func DeleteRoutes(network string) {
 	if _, ok := Routes[network]; ok {
 		delete(Routes, network)
-		fmt.Println("[*] Successfull route deleted")
+		fmt.Println("[*] Successfull route " + network + " deleted")
 	} else {
 		fmt.Println("[-] Route not found")
 	}
