@@ -1,39 +1,33 @@
-name: Release with goreleaser
+name: goreleaser
+
 on:
   push:
     tags:
       - v*.*
+
+permissions:
+  contents: write
+
 jobs:
-  releases-matrix-windows:
-    name: Release Go Binary for windows
+  goreleaser:
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        goos: [windows]
-        goarch: [amd64]
     steps:
-    - uses: actions/checkout@v2
-    - uses: wangyoucao577/go-release-action@v1.18
-      with:
-        github_token: ${{ secrets.GITHUB_TOKEN }}
-        goos: ${{ matrix.goos }}
-        goarch: ${{ matrix.goarch }}
-        goversion: 1.16
-        ldflags: "-s -w"
-        
-  releases-matrix-linux:
-    name: Release Go Binary for linux
-    runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        goos: [linux]
-        goarch: [386, amd64]
-    steps:
-    - uses: actions/checkout@v2
-    - uses: wangyoucao577/go-release-action@v1.18
-      with:
-        github_token: ${{ secrets.GITHUB_TOKEN }}
-        goos: ${{ matrix.goos }}
-        goarch: ${{ matrix.goarch }}
-        goversion: 1.16
-        ldflags: "-s -w"
+      -
+        name: Checkout
+        uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+      -
+        name: Set up Go
+        uses: actions/setup-go@v2
+        with:
+          go-version: 1.16
+      -
+        name: Run GoReleaser
+        uses: goreleaser/goreleaser-action@v2
+        with:
+          distribution: goreleaser
+          version: latest
+          args: release --rm-dist
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
