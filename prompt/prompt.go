@@ -66,6 +66,26 @@ func executor(in string) {
 
 			case "flush":
 				router.FlushRoutes()
+
+			case "dump":
+				router.DumpRoutes()
+
+			case "import":
+				fmt.Println("Paste the output of a route dump and end with an empty line")
+				var lines string
+				scanner := bufio.NewScanner(os.Stdin)
+				for scanner.Scan() {
+					line := scanner.Text()
+					lines += line + "\n"
+					if line == "" {
+						break
+					}
+				}
+				for _, line := range strings.Split(lines, "\n") {
+					if line != "" {
+						executor(line)
+					}
+				}
 			default:
 
 				fmt.Println("Invalid route command")

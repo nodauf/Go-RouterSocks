@@ -19,6 +19,8 @@ var actionsRoute = []prompt.Suggest{
 	{Text: "flush", Description: "Remove all the routes"},
 	{Text: "print", Description: "Print the routes"},
 	{Text: "delete", Description: "Delete one route"},
+	{Text: "dump", Description: "Dump the route as a command line to import them later"},
+	{Text: "import", Description: "Parse multiple route add command"},
 }
 
 var helpSubCommand = []prompt.Suggest{
