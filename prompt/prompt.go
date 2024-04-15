@@ -25,6 +25,8 @@ func executor(in string) {
 				helpRoute()
 			case "chisel":
 				helpChisel()
+			case "geoip":
+				helpGeoIP()
 			}
 		} else {
 			help()
@@ -41,14 +43,17 @@ func executor(in string) {
 				} else if serverSocks := utils.IsChiselIDValid(command[3]); serverSocks != "" {
 					remoteNetwork := command[2]
 					router.AddRoutes(remoteNetwork, serverSocks)
-				} else if !utils.IsCIDRValid(command[2]) {
-					fmt.Println("[-] CIDR is not valid")
+				} else if !utils.IsCIDRValid(command[2]) && !router.IsValidIsoCode(command[2]) {
+					fmt.Println("[-] CIDR or ISO code is not valid")
 					helpRouteAdd()
 				} else if !utils.IsRemoteSocksValid(command[3]) {
 					fmt.Println("[-] Socks server, socks port or chisel ID is not valid")
 					helpRouteAdd()
 				} else if !utils.CanResolvedHostname(strings.Split(command[3], ":")[0]) {
 					fmt.Println("[-] Server socks can be resolved")
+					helpRouteAdd()
+				} else if !utils.ServerReachable(command[3]) {
+					fmt.Println("[-] Server is not reachable")
 					helpRouteAdd()
 				} else {
 					remoteNetwork := command[2]
@@ -97,6 +102,28 @@ func executor(in string) {
 		}
 	case "chisel":
 		utils.PrintChiselProcess()
+	case "geoip":
+		if len(command) > 1 {
+			second := command[1]
+			switch strings.ToLower(second) {
+			case "load":
+
+				if len(command) != 3 {
+					helpGeoIPLoad()
+				} else {
+					err := router.LoadGeoIPDatabase(command[2])
+					if err != nil {
+						fmt.Printf("[-] Fail to load the database %s: %s\n", command[2], err.Error())
+					} else {
+						fmt.Printf("[*] GeoIP database %s loaded\n", command[2])
+					}
+				}
+			case "print":
+				router.PrintCountry()
+			}
+		} else {
+			helpGeoIP()
+		}
 	case "exit":
 		os.Exit(0)
 	case "":

@@ -8,6 +8,7 @@ import (
 
 var commands = []prompt.Suggest{
 	{Text: "route", Description: "Manage routes. (default print them)"},
+	{Text: "geoip", Description: "List the supported GeoIP country"},
 	{Text: "chisel", Description: "List chisel port on this machine"},
 	{Text: "help", Description: "Help menu"},
 
@@ -23,9 +24,15 @@ var actionsRoute = []prompt.Suggest{
 	{Text: "import", Description: "Parse multiple route add command"},
 }
 
+var geoIPSubCommand = []prompt.Suggest{
+	{Text: "load", Description: "Load a GeoIP database"},
+	{Text: "print", Description: "Print all ISO codes with the associated country"},
+}
+
 var helpSubCommand = []prompt.Suggest{
 	{Text: "route", Description: "Add new route"},
 	{Text: "chisel", Description: "List chisel port on this machine"},
+	{Text: "geoip", Description: "List the supported GeoIP country"},
 }
 
 func complete(d prompt.Document) []prompt.Suggest {
@@ -43,6 +50,12 @@ func complete(d prompt.Document) []prompt.Suggest {
 		second := args[1]
 		if len(args) == 2 {
 			return prompt.FilterHasPrefix(actionsRoute, second, true)
+		}
+
+	case "geoip":
+		second := args[1]
+		if len(args) == 2 {
+			return prompt.FilterHasPrefix(geoIPSubCommand, second, true)
 		}
 
 	case "help":

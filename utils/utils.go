@@ -6,6 +6,7 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
+	"time"
 
 	netstat "github.com/nodauf/Go-RouterSocks/utils/netstat"
 )
@@ -32,6 +33,7 @@ func CanResolvedHostname(server string) bool {
 
 func CIDRContainsIP(cidr string, ip string) bool {
 	_, network, _ := net.ParseCIDR(cidr)
+	fmt.Println(cidr)
 	return network.Contains(net.ParseIP(ip))
 }
 
@@ -66,4 +68,10 @@ func GetChiselProcess() {
 
 		}
 	}
+}
+
+func ServerReachable(server string) bool {
+	timeout := 1 * time.Second
+	_, err := net.DialTimeout("tcp", server, timeout)
+	return err == nil
 }
